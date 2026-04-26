@@ -25,14 +25,15 @@ public class Beneficiario {
     @Column(name = "situacao", length = 50)
     private String situacao;
 
-    @Column(name = "quantidade_boletos_mes")
-    private Integer quantidadeBoletosMes;
-
     @Column(name = "valor_total_mes", precision = 12, scale = 2)
     private BigDecimal valorTotalMes;
 
-    @Column(name = "ticket_medio", precision = 10, scale = 2)
-    private BigDecimal ticketMedio;
+    @Column(name = "historico_fraude", precision = 10, scale = 2)
+    private Integer HistoricoFraude;
+
+    @Column(name = "reputacao_score")
+    private Integer reputacaoScore;
+    
 
     public Long getId() {
         return id;
@@ -74,14 +75,6 @@ public class Beneficiario {
         this.situacao = situacao;
     }
 
-    public Integer getQuantidadeBoletosMes() {
-        return quantidadeBoletosMes;
-    }
-
-    public void setQuantidadeBoletosMes(Integer quantidadeBoletosMes) {
-        this.quantidadeBoletosMes = quantidadeBoletosMes;
-    }
-
     public BigDecimal getValorTotalMes() {
         return valorTotalMes;
     }
@@ -90,12 +83,20 @@ public class Beneficiario {
         this.valorTotalMes = valorTotalMes;
     }
 
-    public BigDecimal getTicketMedio() {
-        return ticketMedio;
+    public Integer getReputacaoScore() {
+        return reputacaoScore;
     }
 
-    public void setTicketMedio(BigDecimal ticketMedio) {
-        this.ticketMedio = ticketMedio;
+    public void setReputacaoScore(Integer reputacaoScore) {
+        this.reputacaoScore = reputacaoScore;
+    }
+
+    public Integer getHistoricoFraude() {
+        return HistoricoFraude;
+    }
+
+    public void setHistoricoFraude(Integer historicoFraude) {
+        HistoricoFraude = historicoFraude;
     }
 
 

@@ -1,6 +1,5 @@
 package com.A3.verifica_boleto.model;
 import jakarta.persistence.*;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -13,14 +12,14 @@ public class Boleto {
     @Column(name = "linha_digitavel", length = 48, nullable = false)
     private String linhaDigitavel;
 
-    @Column(name = "cpf_pagador", length = 14, nullable = false)
+    @Column(name = "cpf_pagador", length = 11, nullable = false)
     private String cpfPagador;
 
     @Column(name = "banco_emissor", length = 50, nullable = false)
     private String bancoEmissor;
 
     @Column(nullable = false)
-    private BigDecimal valor;
+    private double valor;
 
     @Column(name = "data_vencimento", nullable = false)
     private LocalDate dataVencimento;
@@ -64,11 +63,11 @@ public class Boleto {
         this.bancoEmissor = bancoEmissor;
     }
 
-    public BigDecimal getValor() {
+    public double getValor() {
         return valor;
     }
 
-    public void setValor(BigDecimal valor) {
+    public void setValor(double valor) {
         this.valor = valor;
     }
 
