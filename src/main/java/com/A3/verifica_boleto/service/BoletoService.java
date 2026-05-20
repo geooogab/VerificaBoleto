@@ -1,53 +1,111 @@
 package com.A3.verifica_boleto.service;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.A3.verifica_boleto.model.Boleto;
+import com.A3.verifica_boleto.service.MlFraudService.MlResultado;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class BoletoService {
+
     @Autowired
-private BeneficiarioService beneficiarioService;
+    private BeneficiarioService beneficiarioService;
 
+    @Autowired
+    private MlFraudService mlFraudService;
 
-    public String analisarBoleto(Boleto boletoRecebido, Boleto boletoDoBanco) {
-        String statusBoleto = "seguro";
-
-        //  Verificar inconsistências
-        if (boletoRecebido.getValor() != boletoDoBanco.getValor() ||
-            !boletoRecebido.getDataVencimento().equals(boletoDoBanco.getDataVencimento()) ||
-            !boletoRecebido.getBancoEmissor().equals(boletoDoBanco.getBancoEmissor())) {
-
-            statusBoleto = "suspeito";
+    public static class Verificacao {
+        public String nome;
+        public boolean ok;
+        public Verificacao(String nome, boolean ok) {
+            this.nome = nome;
+            this.ok   = ok;
         }
-         
+    }
 
-        //  Verificar inconsistências beneficiário (CNPJ e razão social)
-        if (!boletoRecebido.getBeneficiario().getCnpj().equals(boletoDoBanco.getBeneficiario().getCnpj()) ||
-            !boletoRecebido.getBeneficiario().getRazaoSocial().equalsIgnoreCase(boletoDoBanco.getBeneficiario().getRazaoSocial())) {
+    public static class ResultadoAnalise {
+        public String status;           // "Seguro" | "Suspeito" | "Fraude"
+        public String origem;           // "ML" | "Regras fixas"
+        public Integer scoreRisco;      // 0–100 (null se fallback)
+        public List<Verificacao> verificacoes;
+        public String detalhe;
 
-            statusBoleto = "suspeito";
+        public ResultadoAnalise(String status, String origem, Integer scoreRisco,
+                                List<Verificacao> verificacoes, String detalhe) {
+            this.status       = status;
+            this.origem       = origem;
+            this.scoreRisco   = scoreRisco;
+            this.verificacoes = verificacoes;
+            this.detalhe      = detalhe;
         }
+    }
 
-        //  Verificar beneficiário
+    public ResultadoAnalise analisarBoleto(Boleto boletoRecebido, Boleto boletoDoBanco) {
+
+        boolean valorOk      = boletoRecebido.getValor().compareTo(boletoDoBanco.getValor()) == 0;
+        boolean vencimentoOk = boletoRecebido.getDataVencimento().equals(boletoDoBanco.getDataVencimento());
+        boolean bancoOk      = boletoRecebido.getBancoEmissor().equals(boletoDoBanco.getBancoEmissor());
+        boolean cnpjOk       = boletoRecebido.getBeneficiario().getCnpj()
+                                    .equals(boletoDoBanco.getBeneficiario().getCnpj());
+        boolean razaoOk      = boletoRecebido.getBeneficiario().getRazaoSocial()
+                                    .equalsIgnoreCase(boletoDoBanco.getBeneficiario().getRazaoSocial());
+
+        List<Verificacao> verificacoes = new ArrayList<>();
+        verificacoes.add(new Verificacao("Valor confere com o banco",   valorOk));
+        verificacoes.add(new Verificacao("Data de vencimento confere",  vencimentoOk));
+        verificacoes.add(new Verificacao("Banco emissor confere",       bancoOk));
+        verificacoes.add(new Verificacao("CNPJ do beneficiário válido", cnpjOk));
+        verificacoes.add(new Verificacao("Razão social confere",        razaoOk));
+
+        boolean possuiInconsistencia = !valorOk || !vencimentoOk || !bancoOk || !cnpjOk || !razaoOk;
+        String statusBoleto       = possuiInconsistencia ? "suspeito" : "seguro";
         String statusBeneficiario = beneficiarioService.analisarBeneficiario(boletoDoBanco.getBeneficiario());
 
+        StringBuilder inconsistencias = new StringBuilder();
+        if (!valorOk)      inconsistencias.append("valor divergente; ");
+        if (!vencimentoOk) inconsistencias.append("vencimento divergente; ");
+        if (!bancoOk)      inconsistencias.append("banco divergente; ");
+        if (!cnpjOk)       inconsistencias.append("CNPJ divergente; ");
+        if (!razaoOk)      inconsistencias.append("razão social divergente; ");
+        String detalhePrefixo = inconsistencias.length() > 0
+            ? inconsistencias.toString()
+            : "nenhuma inconsistência detectada; ";
 
-        //  Análise final 
-        if ("suspeito".equalsIgnoreCase(statusBoleto) && 
-            "suspeito".equalsIgnoreCase(statusBeneficiario)) {
-            return "fraude";
+        // Análise ML
+        MlResultado ml = mlFraudService.analisar(boletoRecebido, boletoDoBanco);
+
+        if (ml.isDisponivel()) {
+            if (ml.scoreFraude >= 0.75) {
+                return new ResultadoAnalise("Fraude", "ML", ml.scoreRisco, verificacoes,
+                    detalhePrefixo + "ML classificou como fraude com alta confiança.");
+            }
+            if (ml.scoreSuspeito >= 0.50) {
+                return new ResultadoAnalise("Suspeito", "ML", ml.scoreRisco, verificacoes,
+                    detalhePrefixo + "ML classificou como suspeito.");
+            }
+            if (ml.scoreSeguro >= 0.70) {
+                return new ResultadoAnalise("Seguro", "ML", ml.scoreRisco, verificacoes,
+                    detalhePrefixo + "ML classificou como seguro.");
+            }
         }
 
-        if ("fraude".equalsIgnoreCase(statusBeneficiario)) {
-            return "fraude";
+        // Fallback: regras fixas
+        String statusFinal;
+        if ("suspeito".equalsIgnoreCase(statusBoleto) && "suspeito".equalsIgnoreCase(statusBeneficiario)) {
+            statusFinal = "Fraude";
+        } else if ("fraude".equalsIgnoreCase(statusBeneficiario)) {
+            statusFinal = "Fraude";
+        } else if ("suspeito".equalsIgnoreCase(statusBoleto) || "suspeito".equalsIgnoreCase(statusBeneficiario)) {
+            statusFinal = "Suspeito";
+        } else {
+            statusFinal = "Seguro";
         }
 
-        if ("suspeito".equalsIgnoreCase(statusBoleto) || 
-            "suspeito".equalsIgnoreCase(statusBeneficiario)) {
-            return "suspeito";
-        }
-
-        return "seguro";
+        return new ResultadoAnalise(statusFinal, "Regras fixas", null, verificacoes,
+            detalhePrefixo + "ML indisponível ou indeciso — decisão pelas regras fixas.");
     }
 }
