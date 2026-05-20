@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Spring Boot — credenciais locais NUNCA sobem
+application-local.properties
+application-local.yml
+
+# Variáveis de ambiente
+.env
+.env.local
