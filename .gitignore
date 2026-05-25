@@ -39,3 +39,19 @@ application-local.yml
 # Variáveis de ambiente
 .env
 .env.local
+
+# Modelo ML Python — arquivo grande, não sobe no Git
+python-ml/modelo_fraude.pkl
+python-ml/dataset_treino.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
