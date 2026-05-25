@@ -1,0 +1,18 @@
+{
+  "features": [
+    "desvio_valor_signed",
+    "desvio_valor_abs",
+    "desvio_valor_pct",
+    "diff_vencimento_dias",
+    "cnpj_divergente",
+    "banco_divergente",
+    "reputacao_score",
+    "historico_fraude",
+    "dias_desde_abertura"
+  ],
+  "classes": [
+    "fraude",
+    "seguro",
+    "suspeito"
+  ]
+}
