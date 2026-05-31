@@ -24,6 +24,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/boletos")
 @Tag(name = "Boletos", description = "Endpoints para análise e consulta de boletos bancários")
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.POST, RequestMethod.GET, RequestMethod.OPTIONS})
 public class BoletoController {
 
     private final BoletoRepository boletoRepository;
