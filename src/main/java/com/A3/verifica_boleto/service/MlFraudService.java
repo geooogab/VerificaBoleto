@@ -47,8 +47,9 @@ public class MlFraudService {
 
         int cnpjDivergente  = boletoRecebido.getBeneficiario().getCnpj()
                 .equals(boletoDoBanco.getBeneficiario().getCnpj()) ? 0 : 1;
-        int bancoDivergente = boletoRecebido.getBancoEmissor()
-                .equals(boletoDoBanco.getBancoEmissor()) ? 0 : 1;
+        // Se o banco emissor for nulo ou diferente do banco, marca como divergente (1), senão (0)
+        int bancoDivergente = (boletoRecebido.getBancoEmissor() == null || 
+                       !boletoRecebido.getBancoEmissor().equals(boletoDoBanco.getBancoEmissor())) ? 1 : 0;
 
         Beneficiario benDB      = boletoDoBanco.getBeneficiario();
         long diasDesdeAbertura  = ChronoUnit.DAYS.between(benDB.getDataAbertura(), LocalDate.now());

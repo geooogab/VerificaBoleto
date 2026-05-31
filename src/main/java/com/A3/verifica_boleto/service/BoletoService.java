@@ -48,12 +48,13 @@ public class BoletoService {
 
         boolean valorOk      = boletoRecebido.getValor().compareTo(boletoDoBanco.getValor()) == 0;
         boolean vencimentoOk = boletoRecebido.getDataVencimento().equals(boletoDoBanco.getDataVencimento());
-        boolean bancoOk      = boletoRecebido.getBancoEmissor().equals(boletoDoBanco.getBancoEmissor());
+        boolean bancoOk      = boletoRecebido.getBancoEmissor() != null 
+    && boletoRecebido.getBancoEmissor().equals(boletoDoBanco.getBancoEmissor());
         boolean cnpjOk       = boletoRecebido.getBeneficiario().getCnpj()
                                     .equals(boletoDoBanco.getBeneficiario().getCnpj());
-        boolean razaoOk      = boletoRecebido.getBeneficiario().getRazaoSocial()
-                                    .equalsIgnoreCase(boletoDoBanco.getBeneficiario().getRazaoSocial());
-
+        boolean razaoOk      = boletoRecebido.getBeneficiario() != null 
+    && boletoRecebido.getBeneficiario().getRazaoSocial() != null 
+    && boletoRecebido.getBeneficiario().getRazaoSocial().equalsIgnoreCase(boletoDoBanco.getBeneficiario().getRazaoSocial());
         List<Verificacao> verificacoes = new ArrayList<>();
         verificacoes.add(new Verificacao("Valor confere com o banco",   valorOk));
         verificacoes.add(new Verificacao("Data de vencimento confere",  vencimentoOk));
