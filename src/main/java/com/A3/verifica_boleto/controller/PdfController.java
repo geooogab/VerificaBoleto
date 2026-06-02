@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/pdf")
 @Tag(name = "PDF", description = "Extração de dados de boletos via upload de PDF")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class PdfController {
 
     @Autowired
