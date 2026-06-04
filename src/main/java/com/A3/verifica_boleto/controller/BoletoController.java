@@ -69,8 +69,8 @@ public class BoletoController {
     }
 
     @Operation(
-        summary = "Analisar boleto (input manual)",
-        description = "Recebe os dados do boleto informados manualmente pelo usuário, compara com o boleto oficial no banco de dados e retorna o resultado da análise híbrida (regras fixas + ML)."
+        summary = "Analisar boleto",
+        description = "Recebe os dados do boleto informados pelo usuário, compara com o boleto oficial no banco de dados e retorna o resultado da análise híbrida (regras fixas + ML)."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Análise realizada com sucesso",

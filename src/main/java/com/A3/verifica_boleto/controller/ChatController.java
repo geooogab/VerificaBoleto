@@ -1,6 +1,7 @@
 package com.A3.verifica_boleto.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/chat")
 @Tag(name = "Chatbot", description = "Assistente virtual especializado em boletos e segurança financeira")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class ChatController {
 
     private final ChatbotService chatbotService;
@@ -35,6 +37,7 @@ public class ChatController {
             content = @Content(schema = @Schema(type = "string", example = "Um boleto falso geralmente apresenta..."))),
         @ApiResponse(responseCode = "500", description = "Erro ao processar a pergunta", content = @Content)
     })
+    
     @PostMapping
     public ResponseEntity<String> conversar(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
