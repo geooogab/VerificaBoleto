@@ -19,14 +19,18 @@ public class BoletoService {
     private MlFraudService mlFraudService;
 
     public static class Verificacao {
-        public String nome;
-        public boolean ok;
-        public Verificacao(String nome, boolean ok) {
-            this.nome = nome;
-            this.ok   = ok;
-        }
-    }
+    public String nome;
+    public boolean ok;
+    public String valorInformado; // Novo
+    public String valorBanco;     // Novo
 
+    public Verificacao(String nome, boolean ok, String valorInformado, String valorBanco) {
+        this.nome = nome;
+        this.ok   = ok;
+        this.valorInformado = valorInformado;
+        this.valorBanco     = valorBanco;
+    }
+}
     public static class ResultadoAnalise {
         public String status;           // "Seguro" | "Suspeito" | "Fraude"
         public String origem;           // "ML" | "Regras fixas"
@@ -55,12 +59,43 @@ public class BoletoService {
         boolean razaoOk      = boletoRecebido.getBeneficiario() != null 
     && boletoRecebido.getBeneficiario().getRazaoSocial() != null 
     && boletoRecebido.getBeneficiario().getRazaoSocial().equalsIgnoreCase(boletoDoBanco.getBeneficiario().getRazaoSocial());
-        List<Verificacao> verificacoes = new ArrayList<>();
-        verificacoes.add(new Verificacao("Valor confere com o banco",   valorOk));
-        verificacoes.add(new Verificacao("Data de vencimento confere",  vencimentoOk));
-        verificacoes.add(new Verificacao("Banco emissor confere",       bancoOk));
-        verificacoes.add(new Verificacao("CNPJ do beneficiário válido", cnpjOk));
-        verificacoes.add(new Verificacao("Razão social confere",        razaoOk));
+        
+    List<Verificacao> verificacoes = new ArrayList<>();
+    
+    verificacoes.add(new Verificacao(
+        "Valor confere com o banco", 
+        valorOk, 
+        boletoRecebido.getValor() != null ? "R$ " + boletoRecebido.getValor().toString() : "Não informado", 
+        "R$ " + boletoDoBanco.getValor().toString()
+    ));
+
+    verificacoes.add(new Verificacao(
+        "Data de vencimento confere", 
+        vencimentoOk, 
+        boletoRecebido.getDataVencimento() != null ? boletoRecebido.getDataVencimento().toString() : "Não informada", 
+        boletoDoBanco.getDataVencimento().toString()
+    ));
+
+    verificacoes.add(new Verificacao(
+        "Banco emissor confere", 
+        bancoOk, 
+        boletoRecebido.getBancoEmissor() != null ? boletoRecebido.getBancoEmissor() : "Não informado", 
+        boletoDoBanco.getBancoEmissor()
+    ));
+
+    verificacoes.add(new Verificacao(
+        "CNPJ do beneficiário válido", 
+        cnpjOk, 
+        (boletoRecebido.getBeneficiario() != null && boletoRecebido.getBeneficiario().getCnpj() != null) ? boletoRecebido.getBeneficiario().getCnpj() : "Não informado", 
+        boletoDoBanco.getBeneficiario().getCnpj()
+    ));
+
+    verificacoes.add(new Verificacao(
+        "Razão social confere", 
+        razaoOk, 
+        (boletoRecebido.getBeneficiario() != null && boletoRecebido.getBeneficiario().getRazaoSocial() != null) ? boletoRecebido.getBeneficiario().getRazaoSocial() : "Não informada", 
+        boletoDoBanco.getBeneficiario().getRazaoSocial()
+    ));
 
         boolean possuiInconsistencia = !valorOk || !vencimentoOk || !bancoOk || !cnpjOk || !razaoOk;
         String statusBoleto       = possuiInconsistencia ? "suspeito" : "seguro";
