@@ -37,14 +37,20 @@ public class BoletoService {
         public Integer scoreRisco;      // 0–100 (null se fallback)
         public List<Verificacao> verificacoes;
         public String detalhe;
+        public String razaoSocialBeneficiario; // Novo
+        public String statusBeneficiario;      // Novo
 
         public ResultadoAnalise(String status, String origem, Integer scoreRisco,
-                                List<Verificacao> verificacoes, String detalhe) {
+                                List<Verificacao> verificacoes, String detalhe, 
+                                String razaoSocialBeneficiario, String statusBeneficiario) {
             this.status       = status;
             this.origem       = origem;
             this.scoreRisco   = scoreRisco;
             this.verificacoes = verificacoes;
             this.detalhe      = detalhe;
+            this.razaoSocialBeneficiario = razaoSocialBeneficiario;
+            this.statusBeneficiario      = statusBeneficiario;
+            
         }
     }
 
@@ -110,6 +116,10 @@ public class BoletoService {
         String detalhePrefixo = inconsistencias.length() > 0
             ? inconsistencias.toString()
             : "nenhuma inconsistência detectada; ";
+            
+            String razaoSocialOficial = (boletoDoBanco.getBeneficiario() != null && boletoDoBanco.getBeneficiario().getRazaoSocial() != null) 
+            ? boletoDoBanco.getBeneficiario().getRazaoSocial() 
+            : "Não encontrada";
 
         // Análise ML
         MlResultado ml = mlFraudService.analisar(boletoRecebido, boletoDoBanco);
@@ -117,15 +127,18 @@ public class BoletoService {
         if (ml.isDisponivel()) {
             if (ml.scoreFraude >= 0.75) {
                 return new ResultadoAnalise("Fraude", "ML", ml.scoreRisco, verificacoes,
-                    detalhePrefixo + "ML classificou como fraude com alta confiança.");
+                    detalhePrefixo + "ML classificou como fraude com alta confiança.",
+                    razaoSocialOficial, statusBeneficiario);
             }
             if (ml.scoreSuspeito >= 0.50) {
                 return new ResultadoAnalise("Suspeito", "ML", ml.scoreRisco, verificacoes,
-                    detalhePrefixo + "ML classificou como suspeito.");
+                    detalhePrefixo + "ML classificou como suspeito.",
+                    razaoSocialOficial, statusBeneficiario);
             }
             if (ml.scoreSeguro >= 0.70) {
                 return new ResultadoAnalise("Seguro", "ML", ml.scoreRisco, verificacoes,
-                    detalhePrefixo + "ML classificou como seguro.");
+                    detalhePrefixo + "ML classificou como seguro.",
+                    razaoSocialOficial, statusBeneficiario);
             }
         }
 
@@ -142,6 +155,7 @@ public class BoletoService {
         }
 
         return new ResultadoAnalise(statusFinal, "Regras fixas", null, verificacoes,
-            detalhePrefixo + "ML indisponível ou indeciso — decisão pelas regras fixas.");
+            detalhePrefixo + "ML indisponível ou indeciso — decisão pelas regras fixas.",
+                    razaoSocialOficial, statusBeneficiario);
     }
 }
