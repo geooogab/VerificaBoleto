@@ -97,7 +97,7 @@ public class BoletoService {
     ));
 
     verificacoes.add(new Verificacao(
-        "Razão social confere", 
+        "Razão social", 
         razaoOk, 
         (boletoRecebido.getBeneficiario() != null && boletoRecebido.getBeneficiario().getRazaoSocial() != null) ? boletoRecebido.getBeneficiario().getRazaoSocial() : "Não informada", 
         boletoDoBanco.getBeneficiario().getRazaoSocial()
