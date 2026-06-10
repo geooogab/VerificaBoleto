@@ -1,15 +1,29 @@
-# VerificaBoleto
+# Verifica Boleto
 
-![Java](https://img.shields.io/badge/Java_17-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
+<div align="center">
+![Java](https://img.shields.io/badge/Java_21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot_4.0-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
 ![Python](https://img.shields.io/badge/Python_3.10-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Render](https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=black)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
+
+
+<p>
+  <a href="https://frontend-verificaboleto.onrender.com/">🌐 Acessar o sistema </a> •
+  <a href="https://verificaboleto.onrender.com/">🌐 Acessar o sistema</a> •
+  <a href="https://verificaboleto.onrender.com/swagger-ui/index.html">📖 Documentação da API</a>
+</p>
+
+</div>
+
 
 > **Sistema web de detecção de fraudes em boletos bancários com análise híbrida: regras fixas + Machine Learning (Random Forest).**
 
-Boletos adulterados são uma das fraudes financeiras mais comuns no Brasil. O **VerificaBoleto** combina validação determinística com aprendizado de máquina para classificar qualquer boleto recebido como **✅ Seguro**, **⚠️ Suspeito** ou **🚨 Fraude** — com score de risco e explicação detalhada.
+Boletos adulterados são uma das fraudes financeiras mais comuns no Brasil. O **VerificaBoleto** combina validação determinística com aprendizado de máquina para classificar qualquer boleto recebido como **✅ Seguro**, **⚠️ Suspeito** ou **🚨 Fraude**, com score de risco e explicação detalhada.
 
 ---
 
@@ -32,8 +46,7 @@ Boletos adulterados são uma das fraudes financeiras mais comuns no Brasil. O **
 
 - **Verificação campo a campo** — compara valor, vencimento, banco, CNPJ e razão social com o boleto oficial cadastrado no sistema
 - **Classificação via ML** — modelo Random Forest avalia desvios numéricos e retorna probabilidades por classe
-- **Fallback resiliente** — se o microserviço Python estiver indisponível, o sistema continua operando pelas regras fixas
-- **Score de risco** — cada análise retorna um score entre 0 e 1, permitindo decisões graduais (não apenas binário)
+- **Score de risco** — cada análise retorna um score entre 0 e 100, permitindo decisões graduais 
 - **Perfil do beneficiário** — considera reputação (0–100), histórico de fraudes e tempo de existência da empresa
 - **API REST documentada** — integração simples via `POST /boletos/analise`
 
@@ -44,41 +57,31 @@ Boletos adulterados são uma das fraudes financeiras mais comuns no Brasil. O **
 O sistema é composto por **duas aplicações independentes** que se comunicam via HTTP:
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                      USUÁRIO / FRONTEND                  │
-│                   HTML · CSS · JavaScript                │
-└─────────────────────────┬───────────────────────────────┘
-                          │  POST /boletos/analise
-                          ▼
-┌─────────────────────────────────────────────────────────┐
-│              SPRING BOOT                                │
-│                                                         │
-│  Controller ──► Service ──► Repository (Banco de Dados) │
-│                    │                                    │
-│                    │  Calcula desvios numéricos         │
-│                    ▼                                    │
-│              ┌──────────┐                               │
-│              │  Python  │  POST                         │
-│              │  Flask   │◄──────────────────────────────┤
-│              │          │                               │
-│              └──────────┘                               │
-│                    │  { probabilidades por classe }     │
-│                    ▼                                    │
-│            Monta resposta final                         │
-│     { status, scoreRisco, verificacoes, detalhe }       │
-└─────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-               Resposta JSON ao usuário
+┌─────────────────────┐
+│   Frontend Web      │  HTML / CSS / JS
+│   (Render)          │
+└────────┬────────────┘
+         │ HTTP
+┌────────▼────────────┐        ┌─────────────────────┐
+│   Spring Boot       │ REST   │   Python Flask      │
+│   API (porta 8080)  │◄──────►│   ML (porta 5000)   │
+│   (Render)          │        │   (Render)          │
+└────────┬────────────┘        └─────────────────────┘
+         │ JPA
+┌────────▼────────────┐
+│   PostgreSQL        │
+│   (Render)          │
+└─────────────────────┘
+
 ```
 
 ---
 
 ## Fluxo de Análise
 
-A análise ocorre em **três camadas sequenciais**:
+A análise ocorre em **duas camadas sequenciais**:
 
-### Camada 1 — Regras Fixas
+###  Regras Fixas
 Validação determinística campo a campo contra o boleto oficial:
 
 | Campo verificado | Tipo de comparação |
@@ -92,7 +95,7 @@ Validação determinística campo a campo contra o boleto oficial:
 | Histórico de fraudes | Booleano |
 | Idade da empresa | Dias desde abertura |
 
-### Camada 2 — Machine Learning
+###  Machine Learning
 O Java serializa os desvios calculados e envia ao microserviço Python:
 
 ```json
@@ -108,9 +111,6 @@ O Java serializa os desvios calculados e envia ao microserviço Python:
 ```
 
 O modelo Random Forest pondera esses features e retorna a probabilidade de cada classe. Um desvio de **2% no valor** é tratado de forma completamente diferente de um desvio de **500%**.
-
-### Camada 3 — Fallback
-Se o microserviço Python estiver indisponível (timeout ou erro de conexão), o sistema retorna o resultado das **regras fixas** com `"origem": "Regras"` — garantindo disponibilidade contínua.
 
 ---
 
@@ -129,33 +129,19 @@ Se o microserviço Python estiver indisponível (timeout ou erro de conexão), o
 ## Estrutura de Pastas
 
 ```
-verifica-boleto/
-│
-├── src/                             # Aplicação Spring Boot
-│   └── main/
-│       ├── java/com/verificaboleto/
-│       │   ├── controller/          # Endpoints REST
-│       │   ├── service/             # Regras de negócio e orquestração
-│       │   ├── model/               # Entidades JPA
-│       │   ├── repository/          # Acesso ao banco de dados
-│       │   ├── util/                # Utilitários (cálculo de desvios, etc.)
-│       │   └── config/              # Configurações do Spring
-│       └── resources/
-│           └── application.properties
-│
-├── python-ml/                       # Microserviço Python
-│   ├── app_flask.py                 # API Flask (porta 5000)
-│   ├── gerar_treino_e_modelo.py     # Script de treinamento do Random Forest
-│   ├── modelo_rf.pkl                # Modelo serializado (gerado pelo script)
-│   └── requirements.txt
-│
-├── frontend/                        # Interface web
-│   ├── index.html
-│   ├── style.css
-│   └── script.js
-│
-├── pom.xml
-├── mvnw
+VerificaBoleto/
+├── src/main/java/com/A3/verifica_boleto/
+│   ├── config/          AppConfig.java (bean RestTemplate)
+│   ├── controller/      BoletoController, PdfController, ChatController
+│   ├── model/           Boleto, Beneficiario
+│   ├── repository/      BoletoRepository, BeneficiarioRepository
+│   ├── service/         BoletoService, BeneficiarioService,
+│   │                    MlFraudService, PdfService, ChatbotService
+│   └── util/            LinhaDigitavelParser
+├── python ML/
+│   ├── app_flask.py          microserviço Flask
+│   └── treino_e_modelo.py    script de treinamento do modelo
+├── Dockerfile
 └── README.md
 ```
 
@@ -173,98 +159,35 @@ verifica-boleto/
 ### Passo a passo
 
 ```bash
-# 1. Clonar o repositório
+# 1. Clone o repositório
 git clone https://github.com/seu-usuario/verifica-boleto.git
 cd verifica-boleto
 
-# 2. Instalar dependências Python
+# 2. Configure as credenciais
+spring.datasource.url=jdbc:postgresql://localhost:5432/verifica_boleto
+spring.datasource.username=seu_usuario
+spring.datasource.password=sua_senha
+gemini.api.key=sua_chave_gemini
+
+# 3. Treine o modelo ML e suba o Python
+cd "python ML"
 pip install flask pandas scikit-learn
-
-# 3. Gerar o modelo de ML (necessário apenas na primeira execução)
-cd python-ml
 python treino_e_modelo.py
-
-# 4. Subir o microserviço Python (mantenha este terminal aberto)
 python app_flask.py
-# Microserviço rodando em http://localhost:5000
+# Servidor ML rodando em http://localhost:5000
 
-# 5. Em outro terminal, subir o Spring Boot
-cd ..
-./mvnw spring-boot:run
-# API principal rodando em http://localhost:8080
+# 4. Suba o Spring Boot
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+# API rodando em http://localhost:8080
+
+# 5. Acesse
+http://localhost:8080/swagger-ui/index.html
+
 ```
-
-> **Dica:** O microserviço Python deve ser iniciado **antes** do Spring Boot para que a integração ML esteja disponível desde o início. Caso contrário, o sistema opera em modo fallback (regras fixas).
 
 ---
 
-## 📡 Exemplos de Uso (API)
-
-### Request
-
-```http
-POST /boletos/analise
-Content-Type: application/json
-```
-
-```json
-{
-  "codigoBarras": "34191.75124 34567.261229 68055.320001 1 92380000025000",
-  "valor": 297.50,
-  "vencimento": "2025-06-15",
-  "bancoCodigo": "341",
-  "cnpjBeneficiario": "12.345.678/0001-99",
-  "razaoSocialBeneficiario": "Empresa Exemplo Ltda"
-}
-```
-
-### Response — Fraude detectada
-
-```json
-{
-  "status": "Fraude",
-  "origem": "ML",
-  "scoreRisco": 0.92,
-  "verificacoes": [
-    { "nome": "Valor confere com o banco",   "ok": false },
-    { "nome": "Data de vencimento confere",  "ok": true  },
-    { "nome": "Banco emissor confere",       "ok": true  },
-    { "nome": "CNPJ do beneficiário válido", "ok": true  },
-    { "nome": "Razão social confere",        "ok": true  }
-  ],
-  "detalhe": "Valor divergente em 485%. ML classificou como fraude com alta confiança."
-}
-```
-
-### Response — Boleto seguro
-
-```json
-{
-  "status": "Seguro",
-  "origem": "ML",
-  "scoreRisco": 0.04,
-  "verificacoes": [
-    { "nome": "Valor confere com o banco",   "ok": true },
-    { "nome": "Data de vencimento confere",  "ok": true },
-    { "nome": "Banco emissor confere",       "ok": true },
-    { "nome": "CNPJ do beneficiário válido", "ok": true },
-    { "nome": "Razão social confere",        "ok": true }
-  ],
-  "detalhe": "Todos os campos conferem. Nenhuma anomalia detectada."
-}
-```
-
-### Campos de `status` possíveis
-
-| Status | scoreRisco | Significado |
-|---|---|---|
-| `Seguro` | 0.00 – 0.30 | Boleto legítimo, pode pagar |
-| `Suspeito` | 0.31 – 0.69 | Requer atenção — verificar manualmente |
-| `Fraude` | 0.70 – 1.00 | Alta probabilidade de fraude |
-
----
-
-## 🤖 O Modelo de Machine Learning
+## O Modelo de Machine Learning
 
 ### O que é Random Forest?
 
@@ -306,14 +229,14 @@ O modelo foi treinado com **200 árvores de decisão** (`n_estimators=200`) via 
 
 ---
 
-## 🎓 Informações Acadêmicas
+## Desenvolvedoras
 
-| Campo | Informação |
+| Nome | RA |
 |---|---|
-| Disciplina | A3 — Atividade de Avaliação Integrada |
-| Curso | Ciência da Computação |
-| Requisito atendido | Obrigatoriedade de uso de Inteligência Artificial |
-| Implementação de IA | Modelo Random Forest em Python integrado via microserviço Flask ao backend Java |
+| Geovanna Gabriela Pessoa de Jesus | 12524238308 |
+| Thais Lopes Barbosa | 12525151004 |
+
+Projeto A3 — Sistemas Distribuidos e Mobile — Universidade Anhembi Morumbi — 2026
 
 ---
 
