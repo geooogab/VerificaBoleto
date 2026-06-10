@@ -28,21 +28,6 @@ Boletos adulterados são uma das fraudes financeiras mais comuns no Brasil. O **
 
 ---
 
-## Índice
-
-- [Funcionalidades](#-funcionalidades)
-- [Arquitetura](#-arquitetura)
-- [Fluxo de Análise](#-fluxo-de-análise)
-- [Stack de Tecnologias](#-stack-de-tecnologias)
-- [Estrutura de Pastas](#-estrutura-de-pastas)
-- [Como Executar](#-como-executar)
-- [Exemplos de Uso (API)](#-exemplos-de-uso-api)
-- [O Modelo de Machine Learning](#-o-modelo-de-machine-learning)
-- [Informações Acadêmicas](#-informações-acadêmicas)
-- [Licença](#-licença)
-
----
-
 ## Funcionalidades
 
 - **Verificação campo a campo** — compara valor, vencimento, banco, CNPJ e razão social com o boleto oficial cadastrado no sistema
@@ -250,3 +235,5 @@ Distribuído sob a licença **MIT**. Consulte o arquivo [LICENSE](LICENSE) para 
 <div align="center">
   Feito com ☕ e muito <code>System.out.println()</code> para depurar
 </div>
+
+[def]: #-funcionalidades
